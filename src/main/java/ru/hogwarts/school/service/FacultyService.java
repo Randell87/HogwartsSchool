@@ -4,44 +4,43 @@ import org.springframework.stereotype.Service;
 import ru.hogwarts.school.model.Faculty;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 @Service
 public class FacultyService {
 
     private final Map<Long, Faculty> faculties = new HashMap<>();
-    private final AtomicLong idCounter = new AtomicLong(1);
+    private long idCounter = 1;
 
-    public Faculty createFaculty(Faculty faculty) {
-        Long id = idCounter.getAndIncrement();
-        faculty.setId(id);
-        faculties.put(id, faculty);
+    public Faculty addFaculty(Faculty faculty) {
+        faculty.setId(idCounter++);
+        faculties.put(faculty.getId(), faculty);
         return faculty;
     }
 
-    public Faculty getFaculty(Long id) {
-        return faculties.get(id);
+    public Faculty findFaculty(long id) {
+        return faculties.get(id); // может быть null — допустимо
     }
 
-    public Faculty updateFaculty(Faculty faculty) {
-        if (faculties.containsKey(faculty.getId())) {
-            faculties.put(faculty.getId(), faculty);
-            return faculty;
+    public Faculty editFaculty(Faculty faculty) {
+        if (!faculties.containsKey(faculty.getId())) {
+            return null;
         }
-        return null;
+        faculties.put(faculty.getId(), faculty);
+        return faculty;
     }
 
-    public void deleteFaculty(Long id) {
+    public void deleteFaculty(long id) {
         faculties.remove(id);
     }
 
     public Collection<Faculty> getAllFaculties() {
-        return faculties.values();
+        return new ArrayList<>(faculties.values());
     }
 
-    public Collection<Faculty> getFacultiesByColor(String color) {
+    public Collection<Faculty> findByColor(String color) {
         return faculties.values().stream()
-                .filter(f -> f.getColor().equalsIgnoreCase(color))
-                .toList();
+                .filter(faculty -> Objects.equals(faculty.getColor(), color))
+                .collect(Collectors.toList());
     }
 }

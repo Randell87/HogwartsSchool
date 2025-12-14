@@ -4,44 +4,43 @@ import org.springframework.stereotype.Service;
 import ru.hogwarts.school.model.Student;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 @Service
 public class StudentService {
 
     private final Map<Long, Student> students = new HashMap<>();
-    private final AtomicLong idCounter = new AtomicLong(1);
+    private long idCounter = 1;
 
-    public Student createStudent(Student student) {
-        Long id = idCounter.getAndIncrement();
-        student.setId(id);
-        students.put(id, student);
+    public Student addStudent(Student student) {
+        student.setId(idCounter++);
+        students.put(student.getId(), student);
         return student;
     }
 
-    public Student getStudent(Long id) {
-        return students.get(id);
+    public Student findStudent(long id) {
+        return students.get(id); // может быть null — допустимо в рамках теста
     }
 
-    public Student updateStudent(Student student) {
-        if (students.containsKey(student.getId())) {
-            students.put(student.getId(), student);
-            return student;
+    public Student editStudent(Student student) {
+        if (!students.containsKey(student.getId())) {
+            return null;
         }
-        return null;
+        students.put(student.getId(), student);
+        return student;
     }
 
-    public void deleteStudent(Long id) {
+    public void deleteStudent(long id) {
         students.remove(id);
     }
 
     public Collection<Student> getAllStudents() {
-        return students.values();
+        return new ArrayList<>(students.values());
     }
 
-    public Collection<Student> getStudentsByAge(int age) {
+    public Collection<Student> findByAge(int age) {
         return students.values().stream()
-                .filter(s -> s.getAge() == age)
-                .toList();
+                .filter(student -> student.getAge() == age)
+                .collect(Collectors.toList());
     }
 }
