@@ -5,6 +5,7 @@ import ru.hogwarts.school.model.Faculty;
 import ru.hogwarts.school.model.Student;
 import ru.hogwarts.school.service.StudentService;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Comparator;
@@ -100,5 +101,73 @@ public class StudentController {
         return IntStream.rangeClosed(1, 1_000_000)
                 .parallel()
                 .sum();
+    }
+
+    @GetMapping("/students/print-parallel")
+    public void printStudentsParallel() {
+        List<Student> students = new ArrayList<>(studentService.getAllStudents());
+        int size = Math.min(6, students.size());
+        if (size == 0) return;
+
+        // Основной поток: 1–2
+        for (int i = 0; i < Math.min(2, size); i++) {
+            System.out.println(students.get(i).getName());
+        }
+
+        // Поток 1: 3–4
+        if (size > 2) {
+            Thread thread1 = new Thread(() -> {
+                for (int i = 2; i < Math.min(4, size); i++) {
+                    System.out.println(students.get(i).getName());
+                }
+            });
+            thread1.start();
+        }
+
+        // Поток 2: 5–6
+        if (size > 4) {
+            Thread thread2 = new Thread(() -> {
+                for (int i = 4; i < size; i++) {
+                    System.out.println(students.get(i).getName());
+                }
+            });
+            thread2.start();
+        }
+    }
+
+    private synchronized void printName(String name) {
+        System.out.println(name);
+    }
+
+    @GetMapping("/students/print-synchronized")
+    public void printStudentsSynchronized() {
+        List<Student> students = new ArrayList<>(studentService.getAllStudents());
+        int size = Math.min(6, students.size());
+        if (size == 0) return;
+
+        // Основной поток: 1–2
+        for (int i = 0; i < Math.min(2, size); i++) {
+            printName(students.get(i).getName());
+        }
+
+        // Поток 1: 3–4
+        if (size > 2) {
+            Thread thread1 = new Thread(() -> {
+                for (int i = 2; i < Math.min(4, size); i++) {
+                    printName(students.get(i).getName());
+                }
+            });
+            thread1.start();
+        }
+
+        // Поток 2: 5–6
+        if (size > 4) {
+            Thread thread2 = new Thread(() -> {
+                for (int i = 4; i < size; i++) {
+                    printName(students.get(i).getName());
+                }
+            });
+            thread2.start();
+        }
     }
 }
